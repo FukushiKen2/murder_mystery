@@ -8,45 +8,42 @@ const phases = [
   { title: '投票', guide: 'GMが各プレイヤーの推理を入力してください。' },
   { title: '結末', guide: '集計を確認し、ロランの出発選択と得点計算を進行してください。' },
 ];
-const sampleChapters = [
-  [
-    ['展望室の時計', '時計は22時14分で止まっている。机の上の予備時計は動いていた。'],
-    ['廊下の足跡', '展望室へ向かう足跡には、整備区画で使われる白い粉が付いている。'],
-    ['通信メモ', '「先に展望室へ」とだけ記されている。宛名の部分は切り取られている。'],
-    ['機材の貸出簿', '22時前に携帯灯が貸し出された。返却欄は空白だ。'],
-  ],
-  [
-    ['停電の記録', '照明が落ちたのは22時12分。予備電源は3分後に復旧した。'],
-    ['整備区画の記録', '当日の午後、白い粉を使う作業は予定より早く終了している。'],
-    ['扉の点検票', '展望室の扉は、停電中でも内側から開けられる。'],
-    ['放送の下書き', '「予定を変更する」と書かれた一行だけが取り消されている。'],
-  ],
+const evidence = [
+  ["I-01 ホワイトドール引渡要求書", "アグリッパからロランへ渡された要求書。「本日、白い機体を自ら確認した。危険な機構が存在するため、月政府の管理下へ移す必要がある」。末尾にロランの筆跡で「引き渡せません」。", "I-01"],
+  ["I-02 血の付いた整備用手袋", "ホワイトドールの整備場所に残された手袋。指先が裂け、血が付着している。近くに血の付いた整備工具。負傷の正確な時刻は不明。", "I-02"],
+  ["I-03 古い宮殿の私物箱", "現在キエルとして暮らしている人物が宮殿保管庫から引き取った私物箱。300年前の宮殿写真と地球帰還政策をめぐる対立を記した無署名の私的覚書。", "I-03"],
+  ["I-04 古い宮殿の拳銃", "現在キエルとして暮らしている人物が引き取った保管箱の旧式護身用拳銃。最後に使われた時期・発砲者は不明。", "I-04"],
+  ["I-05 宮殿来訪・連絡記録", "事件当日17時にアグリッパが女王に面会。夕刻、地球側の複数の関係者が来訪。グエンは18:20頃に東側通路から入館し、18:55頃に退館。他の地球側関係者のうち、記録上18:30–18:50に東側通路を利用できた者はグエンだけ。別紙にはグエンが月軍との非公式連絡に使う本人専用認証番号 L-17。未記録の訪問者まで完全排除する証拠ではない。", "I-05"],
+  ["I-06 宮殿内部図と警備予定", "女王私室と機密文書室を結ぶ経路。21時頃に警備交代。文書室へ向かう経路に誰かの印。", "I-06"],
+  ["I-07 金糸のほつれた制服", "親衛隊長ハリーの制服。襟元の金糸が数本失われ、新しいほつれ。損傷の時刻・場所は不明。", "I-07"],
+  ["I-08 親衛隊長の事情説明書", "ハリーの書面「事件当夜、21時から21時30分までディアナ女王の私室で面会していた」。女王本人の確認署名なし。", "I-08"],
+  ["I-09 三百年前の軍人身分証", "ディアナ派兵士コレンの身分証。「宮殿での銃撃事件に際して重傷を負い、長期冷凍睡眠による治療に移行」。", "I-09"],
+  ["I-10 旧警備隊の命令記録", "コレンは事件当日女王居室から離れた警備区域にいた。銃声後に配置場所を離れたが正確な時刻不明。後日アグリッパ銃撃容疑者として追記。", "I-10"],
+  ["I-11 旧文明の記録A", "月光蝶の制限装置の構造(X)と復旧操作手順(Y)を記載、安全確認(Z)は欠落。", "I-11"],
+  ["I-12 月軍との暗号通信", "正式承認なしに保存人物の覚醒処置を命じた通信。送信者名なし。認証番号 L-17、送信時刻、宛先は月軍の非公開覚醒施設。S2-03と時刻・対象・指示内容が合致。", "I-12"],
+  ["S1-01 アグリッパの手帳", "「15時。白い機体を調べた。予想外の反応。後で確認する必要がある」「17時。女王は、あの夜のことを忘れたかのようだった」「18時30分。明日の取引について交渉。条件はまだ折り合わない」。相手の名前なし。", "S1-01"],
+  ["S1-02 遺体の右手に残った繊維", "アグリッパの右手に金色の細い繊維。争った形跡、相手の衣服から引きちぎった可能性。", "S1-02"],
+  ["S1-03 アグリッパの伝言", "「明日の技術提供について、今夜中にもう一度確認しておきたい」。宛先不明。届いたかも不明。", "S1-03"],
+  ["S1-04 夜間の警備巡回記録", "20:50–21:20頃、宮殿の一部の巡回記録が途切れる。勤務交代や警備区域変更で複数人の所在不明。ハリーだけを名指ししない。", "S1-04"],
+  ["S1-05 女王の夜間面会予定", "21時台にハリーと女王の面会予定。面会実施記録はあるが開始時刻不明。", "S1-05"],
+  ["S1-06 宮殿使用人の証言", "アグリッパは17時面会後「女王はあの夜のことを忘れたような顔をしていた」。現在キエルとして暮らす人物はアグリッパの生存に激しく動揺。", "S1-06"],
+  ["S1-07 夕刻の訪問者についての証言", "事件当日の18:30頃、アグリッパは地球側の人物と月での政治的復権、旧文明技術の提供について会談。相手は東側連絡通路から出入りし、顔は確認されていない。会談は18:50頃まで。I-05と照合してグエンを有力視できるが1枚では正答を直接示さない。", "S1-07"],
+  ["S1-08 機密文書室の入室記録", "21時頃に機密文書室が使用。正式な入室申請なし、利用者不明。", "S1-08"],
+  ["S1-09 格納庫の整備日誌", "ロランの自己記録。20:30頃から整備、20:40に特殊機構警告、20:50頃指を負傷。", "S1-09"],
+  ["S2-01 格納庫の操作履歴", "15時頃ホワイトドール整備端末が操作され、月光蝶に関係する安全制限が解除され復旧されていない。操作者不明。", "S2-01"],
+  ["S2-02 旧文明技術の移送準備記録", "翌日の技術資料提供の準備。主要資料は保管されたままで引渡し未実施。相手氏名なし。", "S2-02"],
+  ["S2-03 覚醒施設の作業記録", "アグリッパが正式承認なしに覚醒。施設は外部指示を受けた。L-17、受信時刻、対象アグリッパが記録される。I-12と合致。", "S2-03"],
+  ["S2-04 アグリッパ派の警備報告", "300年前「女王の保護のためアグリッパ卿が居室へ向かった」「銃声後、コレンが現れたため襲撃犯と誤認し護衛が発砲」。コレンがアグリッパを撃つのを目撃していない。", "S2-04"],
+  ["S2-05 宮殿侍従の古い証言", "300年前、アグリッパが女王居室へ向かった後に1発銃声。護衛が駆けつけた。女王の護身用拳銃が事件後見当たらない。発砲瞬間の目撃なし。", "S2-05"],
+  ["S2-06 旧文明の記録B", "復旧操作(Y)と安全確認(Z)、制限装置の構造(X)不足。", "S2-06"],
+  ["S2-07 旧文明の記録C", "制限装置の構造(X)と安全確認(Z)、復旧操作(Y)不足。", "S2-07"],
+  ["S2-08 アグリッパの取引覚書", "翌日地球側へ旧文明技術情報の提供予定、見返りに月での政治復権。相手名なし。親衛隊から中止要求あり。", "S2-08"],
+  ["S2-09 三百年前の搬送記録", "300年前の事件当夜に二名搬送。コレン名あり。もう一人は胸に銃創のある氏名非公開患者で軍の別施設へ。両名とも長期治療が必要。", "S2-09"],
 ];
+const chapters = [evidence.slice(0, 21), evidence];
 const investigationLimit = 2;
-let chapters = sampleChapters;
-const sampleStorageKey = 'murder-mystery-session-v1';
-let storageKey = sampleStorageKey;
+const storageKey = 'murder-mystery-evidence-session-v1';
 const get = (id) => document.getElementById(id);
-
-function parseEvidence(source) {
-  const section = source.match(/^## C\. [^\n]*\n([\s\S]*?)(?=^## D\.|(?![\s\S]))/m)?.[1] ?? '';
-  const entries = [...section.matchAll(
-    /^\*\*((?:I|S1|S2)-\d{2})｜([^\n]+?)\*\*[^\n]*\n> (.+)$/gm
-  )];
-  const cards = new Map(entries.map(([, id, title, body]) => [
-    id, [`${id} ${title}`, body.replaceAll('**', ''), id],
-  ]));
-  const ids = (group, count) => Array.from({ length: count }, (_, index) =>
-    `${group}-${String(index + 1).padStart(2, '0')}`);
-  const items = ids('I', 12);
-  const chapterOne = ids('S1', 9);
-  const chapterTwo = ids('S2', 9);
-  if (entries.length !== 30 || ![...items, ...chapterOne, ...chapterTwo].every((id) => cards.has(id))) {
-    throw new Error('証拠カード30枚を確認できませんでした。');
-  }
-  return [[...items, ...chapterOne], [...items, ...chapterOne, ...chapterTwo]]
-    .map((chapter) => chapter.map((id) => cards.get(id)));
-}
 
 function restoreInvestigations(saved) {
   return chapters.map((cards, chapter) => roles.map((_, role) => {
@@ -206,7 +203,7 @@ function render() {
   const { phase } = session;
   get('phase').textContent = phases[phase].title;
   get('phase-guide').textContent = phases[phase].guide;
-  if (chapters !== sampleChapters && phase === 1) {
+  if (phase === 1) {
     get('phase-guide').textContent += ' アグリッパの直接死因は絞殺です。月光蝶の安全制限は、記録A・B・Cの異なる2枚で復旧できます。';
   }
   get('roster').replaceChildren(...roles.map((_, index) => listItem(playerLabel(index))));
@@ -222,25 +219,6 @@ function render() {
 function startSession(names) {
   saveSession({ names, phase: 0, votes: [], investigations: restoreInvestigations() });
 }
-
-get('scenario-file').addEventListener('change', async ({ currentTarget: input }) => {
-  const file = input.files[0];
-  if (!file) return;
-  try {
-    const source = (await file.text()).replace(/\r\n/g, '\n');
-    if (input.files[0] !== file) return;
-    chapters = parseEvidence(source);
-    storageKey = 'murder-mystery-evidence-session-v1';
-    session = readSession();
-    get('scenario-status').textContent = '証拠カード30枚を読み込みました。ページを開き直したら、同じ原稿を選ぶと進行を再開できます。';
-    get('demo').textContent = '仮の名前で第1章を開始';
-    render();
-  } catch {
-    if (input.files[0] !== file) return;
-    get('scenario-status').textContent = '原稿を読み込めませんでした。CHARACTERS_AND_CARDS.md を選び直してください。';
-    input.value = '';
-  }
-});
 
 get('demo').addEventListener('click', () => {
   if (!session) startSession(roles.map((_, index) => `参加者${index + 1}`));
@@ -278,4 +256,3 @@ get('reset').addEventListener('click', () => {
 render();
 get('start').disabled = false;
 get('demo').disabled = false;
-get('scenario-file').disabled = false;

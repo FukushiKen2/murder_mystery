@@ -3,15 +3,11 @@
   <p class="note">この端末に進行を保存します。投票入力と結果表示はGMが管理してください。</p>
   <noscript><p>操作するにはJavaScriptが有効なブラウザーでページを開いてください。</p></noscript>
   <p id="status" role="status">操作ボタンを読み込んでいます。表示が変わらない場合は、ダウンロードしたHTMLをブラウザーで直接開いてください。</p>
-  <label>GM用の証拠カード原稿を選択
-    <input id="scenario-file" type="file" accept=".md,text/markdown,text/plain" disabled>
-  </label>
-  <p id="scenario-status" class="note" role="status">CHARACTERS_AND_CARDS.md を選ぶと、この端末で実際の証拠カード30枚を使えます。</p>
   <form id="setup">
     <h3>参加者を登録</h3>
     <div id="participants" class="fields"></div>
     <button id="start" type="submit" disabled>第1章を開始</button>
-    <button id="demo" type="button" disabled>サンプルで試す</button>
+    <button id="demo" type="button" disabled>仮の名前で第1章を開始</button>
   </form>
   <div id="session" hidden>
     <h3 id="phase" tabindex="-1"></h3>
@@ -19,7 +15,7 @@
     <ul id="roster" class="roster"></ul>
     <section id="investigation" aria-labelledby="investigation-title" hidden>
       <h4 id="investigation-title">カード調査</h4>
-      <p class="note">GMが調査する役を選び、手がかりを確認します。</p>
+      <p class="note">自分の役を選んで、調べたいカードを押してください。各章2枚まで調査できます。</p>
       <label>調査する役<select id="investigator"></select></label>
       <p id="clue-limit" role="status"></p>
       <div id="clue-board" class="fields"></div>
