@@ -46,4 +46,18 @@ select {
 .clue-card p { margin: 6px 0 10px; color: var(--muted); overflow-wrap: anywhere; }
 .clue-card.clue-recorded { border-color: var(--gold); }
 
-.clue-card form button { margin-top: 8px; }
+#clue-board { align-items: start; }
+#clue-notes, #current-holdings { font-size: 1.125rem; line-height: 1.8; }
+#clue-notes li + li, #current-holdings li + li { margin-top: 10px; }
+
+.clue-transfer { color: var(--muted); font-size: .875rem; }
+.clue-transfer summary { width: fit-content; cursor: pointer; }
+.clue-transfer form { margin-top: 4px; }
+.clue-transfer select { margin-top: 4px; padding: 6px 8px; }
+.clue-transfer button {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+}

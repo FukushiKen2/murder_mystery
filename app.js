@@ -248,6 +248,11 @@ function renderInvestigation() {
       card.append(button);
     }
     if (record && canTransfer) {
+      const transferPanel = document.createElement('details');
+      transferPanel.className = 'clue-transfer';
+      const summary = document.createElement('summary');
+      summary.textContent = '譲渡';
+      summary.setAttribute('aria-label', `${clueLabel(id)}の譲渡`);
       const form = document.createElement('form');
       const recipient = document.createElement('select');
       recipient.required = true;
@@ -267,7 +272,8 @@ function renderInvestigation() {
         renderInvestigation();
         get('transfer-history').focus();
       });
-      card.append(form);
+      transferPanel.append(summary, form);
+      card.append(transferPanel);
     }
     board.append(card);
   });
