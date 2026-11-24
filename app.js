@@ -132,6 +132,15 @@ function playerLabel(index) {
   return `${roles[index]}（${session.names[index]}）`;
 }
 
+function clueLabel(id) {
+  const [group, number] = id.split('-');
+  const index = Number(number) - 1;
+  if (group === 'I') {
+    return `${roles[Math.floor(index / 2)]}のカード${index % 2 + 1}`;
+  }
+  return `状況カード${index + (group === 'S2' ? 10 : 1)}`;
+}
+
 function renderInvestigation() {
   const { phase, investigations } = session;
   get('investigation').hidden = phase > chapters.length;
@@ -157,15 +166,15 @@ function renderInvestigation() {
     });
   });
   const displayCards = cards ?? evidence.filter(([, , id]) => holders.has(id));
-  displayCards.forEach(([title, , id], index) => {
+  displayCards.forEach(([, , id], index) => {
     const related = id.startsWith('I-');
     const owner = holders.get(id);
     const card = document.createElement('article');
     card.className = 'clue-card';
     const heading = document.createElement('h5');
-    heading.textContent = title;
+    heading.textContent = clueLabel(id);
     const details = document.createElement('p');
-    details.textContent = `${related ? '人物関連の所持品' : '状況証拠'} · ${owner === undefined ? '未取得' : `所持者：${playerLabel(owner)}`}`;
+    details.textContent = `${related ? '所持カード' : '状況カード'} · ${owner === undefined ? '未調査' : `調査した役：${playerLabel(owner)}`}`;
     if (owner !== undefined) card.classList.add('clue-recorded');
     card.append(heading, details);
 
@@ -174,7 +183,7 @@ function renderInvestigation() {
       const button = document.createElement('button');
       button.type = 'button';
       button.textContent = ownItem ? 'この役では調査不可' : '調査を記録';
-      button.setAttribute('aria-label', `${title}：${button.textContent}`);
+      button.setAttribute('aria-label', `${clueLabel(id)}：${button.textContent}`);
       button.disabled = ownItem || picks.length >= investigationLimit;
       button.addEventListener('click', () => {
         const updated = structuredClone(investigations);
@@ -188,8 +197,8 @@ function renderInvestigation() {
 
   const notes = investigations.slice(0, phase + 1).flatMap((byRole, chapter) =>
     byRole[role].map((index) => {
-      const [title, clue] = chapters[chapter][index];
-      return listItem(`第${chapter + 1}章　${title}：${clue}`);
+      const [title, clue, id] = chapters[chapter][index];
+      return listItem(`第${chapter + 1}章　${clueLabel(id)}（${title}）：${clue}`);
     }));
   get('clue-notes').replaceChildren(...(notes.length ? notes : [listItem('調査したカードはまだありません。')]));
 }
