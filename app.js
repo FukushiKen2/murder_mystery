@@ -150,22 +150,40 @@ function renderInvestigation() {
     ? `この章の残り調査回数 ${investigationLimit - picks.length} 回`
     : 'これまでに調べたカードを見直せます。';
 
-  const found = new Set(investigations.slice(0, phase + 1).flatMap((byRole, chapter) =>
-    byRole.flatMap((rolePicks) => rolePicks.map((index) => chapters[chapter][index][2]))));
-  cards?.forEach(([title, , id], index) => {
-    const ownItem = id?.startsWith('I-') && Math.floor((Number(id.slice(2)) - 1) / 2) === role;
-    const unavailable = picks.includes(index) || (id && found.has(id)) || ownItem;
-    const button = document.createElement('button');
-    button.type = 'button';
-    const suffix = ownItem ? '（この役では調査不可）' : unavailable ? '（調査済み）' : 'を調査';
-    button.textContent = title + suffix;
-    button.disabled = unavailable || picks.length >= investigationLimit;
-    button.addEventListener('click', () => {
-      const updated = structuredClone(investigations);
-      updated[phase][role].push(index);
-      saveSession({ ...session, investigations: updated }, 'clue-notes');
+  const holders = new Map();
+  investigations.slice(0, phase + 1).forEach((byRole, chapter) => {
+    byRole.forEach((rolePicks, owner) => {
+      rolePicks.forEach((index) => holders.set(chapters[chapter][index][2], owner));
     });
-    board.append(button);
+  });
+  const displayCards = cards ?? evidence.filter(([, , id]) => holders.has(id));
+  displayCards.forEach(([title, , id], index) => {
+    const related = id.startsWith('I-');
+    const owner = holders.get(id);
+    const card = document.createElement('article');
+    card.className = 'clue-card';
+    const heading = document.createElement('h5');
+    heading.textContent = title;
+    const details = document.createElement('p');
+    details.textContent = `${related ? '人物関連の所持品' : '状況証拠'} · ${owner === undefined ? '未取得' : `所持者：${playerLabel(owner)}`}`;
+    if (owner !== undefined) card.classList.add('clue-recorded');
+    card.append(heading, details);
+
+    if (cards && owner === undefined) {
+      const ownItem = related && Math.floor((Number(id.slice(2)) - 1) / 2) === role;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = ownItem ? 'この役では調査不可' : '調査を記録';
+      button.setAttribute('aria-label', `${title}：${button.textContent}`);
+      button.disabled = ownItem || picks.length >= investigationLimit;
+      button.addEventListener('click', () => {
+        const updated = structuredClone(investigations);
+        updated[phase][role].push(index);
+        saveSession({ ...session, investigations: updated }, 'clue-notes');
+      });
+      card.append(button);
+    }
+    board.append(card);
   });
 
   const notes = investigations.slice(0, phase + 1).flatMap((byRole, chapter) =>
