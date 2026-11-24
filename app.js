@@ -8,7 +8,7 @@ const phases = [
   { title: '投票', guide: 'GMが各プレイヤーの推理を入力してください。' },
   { title: '結末', guide: '集計を確認し、ロランの出発選択と得点計算を進行してください。' },
 ];
-const chapters = [
+const sampleChapters = [
   [
     ['展望室の時計', '時計は22時14分で止まっている。机の上の予備時計は動いていた。'],
     ['廊下の足跡', '展望室へ向かう足跡には、整備区画で使われる白い粉が付いている。'],
@@ -23,6 +23,30 @@ const chapters = [
   ],
 ];
 const investigationLimit = 2;
+let chapters = sampleChapters;
+const sampleStorageKey = 'murder-mystery-session-v1';
+let storageKey = sampleStorageKey;
+const get = (id) => document.getElementById(id);
+
+function parseEvidence(source) {
+  const section = source.match(/^## C\. [^\n]*\n([\s\S]*?)(?=^## D\.|(?![\s\S]))/m)?.[1] ?? '';
+  const entries = [...section.matchAll(
+    /^\*\*((?:I|S1|S2)-\d{2})｜([^\n]+?)\*\*[^\n]*\n> (.+)$/gm
+  )];
+  const cards = new Map(entries.map(([, id, title, body]) => [
+    id, [`${id} ${title}`, body.replaceAll('**', ''), id],
+  ]));
+  const ids = (group, count) => Array.from({ length: count }, (_, index) =>
+    `${group}-${String(index + 1).padStart(2, '0')}`);
+  const items = ids('I', 12);
+  const chapterOne = ids('S1', 9);
+  const chapterTwo = ids('S2', 9);
+  if (entries.length !== 30 || ![...items, ...chapterOne, ...chapterTwo].every((id) => cards.has(id))) {
+    throw new Error('証拠カード30枚を確認できませんでした。');
+  }
+  return [[...items, ...chapterOne], [...items, ...chapterOne, ...chapterTwo]]
+    .map((chapter) => chapter.map((id) => cards.get(id)));
+}
 
 function restoreInvestigations(saved) {
   return chapters.map((cards, chapter) => roles.map((_, role) => {
@@ -32,9 +56,6 @@ function restoreInvestigations(saved) {
       && pick >= 0 && pick < cards.length))].slice(0, investigationLimit);
   }));
 }
-
-const storageKey = 'murder-mystery-session-v1';
-const get = (id) => document.getElementById(id);
 
 function readSession() {
   get('status').textContent = '';
@@ -126,13 +147,17 @@ function renderInvestigation() {
     ? `この章の残り調査回数 ${investigationLimit - picks.length} 回`
     : 'これまでに調べたカードを見直せます。';
 
-  cards?.forEach(([title], index) => {
+  const found = new Set(investigations.slice(0, phase + 1).flatMap((byRole, chapter) =>
+    byRole.flatMap((rolePicks) => rolePicks.map((index) => chapters[chapter][index][2]))));
+  cards?.forEach(([title, , id], index) => {
+    const ownItem = id?.startsWith('I-') && Math.floor((Number(id.slice(2)) - 1) / 2) === role;
+    const unavailable = picks.includes(index) || (id && found.has(id)) || ownItem;
     const button = document.createElement('button');
     button.type = 'button';
-    button.textContent = picks.includes(index) ? `${title}（調査済み）` : `${title}を調査`;
-    button.disabled = picks.includes(index) || picks.length >= investigationLimit;
+    const suffix = ownItem ? '（自分の関連品）' : unavailable ? '（調査済み）' : 'を調査';
+    button.textContent = title + suffix;
+    button.disabled = unavailable || picks.length >= investigationLimit;
     button.addEventListener('click', () => {
-      if (picks.includes(index) || picks.length >= investigationLimit) return;
       const updated = structuredClone(investigations);
       updated[phase][role].push(index);
       saveSession({ ...session, investigations: updated }, 'clue-notes');
@@ -181,6 +206,9 @@ function render() {
   const { phase } = session;
   get('phase').textContent = phases[phase].title;
   get('phase-guide').textContent = phases[phase].guide;
+  if (chapters !== sampleChapters && phase === 1) {
+    get('phase-guide').textContent += ' アグリッパの直接死因は絞殺です。月光蝶の安全制限は、記録A・B・Cの異なる2枚で復旧できます。';
+  }
   get('roster').replaceChildren(...roles.map((_, index) => listItem(playerLabel(index))));
   get('advance').hidden = phase >= 3;
   get('advance').textContent = phases[phase].next ?? '';
@@ -194,6 +222,25 @@ function render() {
 function startSession(names) {
   saveSession({ names, phase: 0, votes: [], investigations: restoreInvestigations() });
 }
+
+get('scenario-file').addEventListener('change', async ({ currentTarget: input }) => {
+  const file = input.files[0];
+  if (!file) return;
+  try {
+    const source = (await file.text()).replace(/\r\n/g, '\n');
+    if (input.files[0] !== file) return;
+    chapters = parseEvidence(source);
+    storageKey = 'murder-mystery-evidence-session-v1';
+    session = readSession();
+    get('scenario-status').textContent = '証拠カード30枚を読み込みました。ページを開き直したら、同じ原稿を選ぶと進行を再開できます。';
+    get('demo').textContent = '仮の名前で第1章を開始';
+    render();
+  } catch {
+    if (input.files[0] !== file) return;
+    get('scenario-status').textContent = '原稿を読み込めませんでした。CHARACTERS_AND_CARDS.md を選び直してください。';
+    input.value = '';
+  }
+});
 
 get('demo').addEventListener('click', () => {
   if (!session) startSession(roles.map((_, index) => `参加者${index + 1}`));
@@ -231,3 +278,4 @@ get('reset').addEventListener('click', () => {
 render();
 get('start').disabled = false;
 get('demo').disabled = false;
+get('scenario-file').disabled = false;
