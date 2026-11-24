@@ -2,9 +2,34 @@
 
 const roles = ['ロラン', 'ディアナ', 'キエル', 'ハリー', 'コレン', 'グエン'];
 const phases = [
-  { title: '第1章', guide: '各自2枚まで調査し、話し合います。', next: '第2章へ' },
-  { title: '第2章', guide: '各自2枚調査し、集まった手がかりを確認します。', next: '第3章へ' },
-  { title: '第3章', guide: '最終討論を終えたら、投票に進みます。', next: '投票へ' },
+  {
+    title: '第1章',
+    story: [
+      '月の宮殿の会議室に、六人が集まった。三百年前の地球帰還をめぐる対立を知るアグリッパは、目を覚ましたその日の夜に遺体で見つかった。胸には銃で撃たれたような傷がある。まだ、いつ、どのように亡くなったのかは分からない。',
+      '宮殿には、彼が目を覚ましてからの足取りを知る人や、当夜の記録が残っている。まずは、それぞれが見聞きしたことを話し、気になる場所や品を調べよう。',
+    ],
+    guide: '各自2枚まで調査できます。調べたいカードをGMに伝えてください。',
+    next: '第2章へ',
+  },
+  {
+    title: '第2章',
+    story: [
+      '調査の途中、アグリッパの遺体を調べた結果が会議室に届く。死因は絞殺だった。胸の傷がいつできたのかは、まだ分かっていない。',
+      '同じ頃、格納庫からも知らせが入る。ホワイトドールに備わる月光蝶の安全制限が解除されている。復旧に必要な情報は記録A・B・Cに分かれていて、異なる2枚がそろえば安全制限を戻せる。',
+      '誰がアグリッパを殺したのか。そして、ホワイトドールに何が起きたのか。新しく調べられる資料を手がかりに、ここまでの話をもう一度確かめよう。',
+    ],
+    guide: '第1章で未調査だったカードも含め、各自あと2枚まで調査できます。',
+    next: '第3章へ',
+  },
+  {
+    title: '第3章',
+    story: [
+      '六人は会議室で、集めた証拠とそれぞれの話を照らし合わせる。過去の出来事と今夜の死を結びつける手がかりもあれば、まだ説明のつかない食い違いもある。',
+      '投票の前に、確かめたいことがある相手には今のうちに聞いておこう。証拠を誰に託すか、誰を疑うか。話し合いが終わったら、それぞれが自分の答えを出す。',
+    ],
+    guide: '新しい調査は終了です。カードを見直し、譲渡と最終討論を進めてください。',
+    next: '投票へ',
+  },
   { title: '投票', guide: 'GMが各プレイヤーの推理を入力してください。' },
   { title: '結末', guide: '集計を確認し、ロランの最後の選択を記録してください。' },
 ];
@@ -399,14 +424,19 @@ function render() {
   if (!session) return;
 
   const { phase } = session;
-  get('phase').textContent = phases[phase].title;
-  get('phase-guide').textContent = phases[phase].guide;
-  if (phase === 1) {
-    get('phase-guide').textContent += ' アグリッパの直接死因は絞殺です。月光蝶の安全制限は、記録A・B・Cの異なる2枚で復旧できます。';
-  }
+  const { title, story, guide, next } = phases[phase];
+  get('phase').textContent = title;
+  const opening = get('chapter-opening');
+  opening.hidden = !story;
+  get('chapter-story').replaceChildren(...(story ?? []).map((text) => {
+    const paragraph = document.createElement('p');
+    paragraph.textContent = text;
+    return paragraph;
+  }));
+  get('phase-guide').textContent = guide;
   get('roster').replaceChildren(...roles.map((_, index) => listItem(playerLabel(index))));
   get('advance').hidden = phase >= 3;
-  get('advance').textContent = phases[phase].next ?? '';
+  get('advance').textContent = next ?? '';
   get('voting').hidden = phase !== 3;
   get('results').hidden = phase !== 4;
   renderInvestigation();

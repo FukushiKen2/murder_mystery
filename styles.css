@@ -61,3 +61,14 @@ select {
   background: transparent;
   color: var(--text);
 }
+
+#chapter-opening {
+  max-width: 42em;
+  margin: 16px 0;
+  padding: 16px;
+  border-left: 2px solid var(--gold);
+  background: var(--bg);
+}
+#chapter-opening h4 { margin: 0 0 8px; color: var(--gold); }
+#chapter-story p { margin: 0 0 .8em; }
+#chapter-story p:last-child { margin-bottom: 0; }
