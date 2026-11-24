@@ -108,12 +108,6 @@ function listItem(text) {
 }
 
 roles.forEach((role) => {
-  const card = document.createElement('article');
-  const title = document.createElement('h3');
-  title.textContent = role;
-  card.append(title);
-  get('roles').append(card);
-
   const input = document.createElement('input');
   input.required = true;
   input.maxLength = 40;
