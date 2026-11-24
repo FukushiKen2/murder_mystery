@@ -6,7 +6,7 @@ const phases = [
   { title: '第2章', guide: '各自2枚調査し、集まった手がかりを確認します。', next: '第3章へ' },
   { title: '第3章', guide: '最終討論とカードの譲渡を終えたら、投票に進みます。', next: '投票へ' },
   { title: '投票', guide: 'GMが各プレイヤーの推理を入力してください。' },
-  { title: '結末', guide: '集計を確認し、ロランの出発選択と得点計算を進行してください。' },
+  { title: '結末', guide: '集計を確認し、ロランの最後の選択を記録してください。' },
 ];
 const evidence = [
   ["I-01 ホワイトドール引渡要求書", "アグリッパからロランへ渡された要求書。「本日、白い機体を自ら確認した。危険な機構が存在するため、月政府の管理下へ移す必要がある」。末尾にロランの筆跡で「引き渡せません」。", "I-01"],
@@ -54,6 +54,17 @@ function restoreInvestigations(saved) {
   }));
 }
 
+function validDeparture(ending) {
+  if (!ending) return false;
+  const { detained, leaves, passengers } = ending;
+  return Number.isInteger(detained) && detained >= -1 && detained < roles.length
+    && typeof leaves === 'boolean' && Array.isArray(passengers)
+    && passengers.length <= 2 && new Set(passengers).size === passengers.length
+    && (!leaves ? passengers.length === 0 : detained !== 0)
+    && passengers.every((role) => Number.isInteger(role) && role > 0
+      && role < roles.length && role !== detained);
+}
+
 function readSession() {
   get('status').textContent = '';
   try {
@@ -70,6 +81,7 @@ function readSession() {
       return {
         names, phase, votes: phase === 4 ? votes : [],
         investigations: restoreInvestigations(saved.investigations),
+        ending: phase === 4 && validDeparture(saved.ending) ? saved.ending : null,
       };
     }
     get('status').textContent = '保存済みの進行を読み込めませんでした。';
@@ -189,6 +201,69 @@ function renderResults() {
   get('totals').replaceChildren(...roles.map((role, index) => listItem(`${role}：${counts[index]}票`)));
 }
 
+function updateDepartureOptions() {
+  const detained = get('detained').value;
+  const choice = get('departure-choice');
+  choice.disabled = detained === '' || detained === '0';
+  choice.options[2].disabled = choice.disabled;
+  if (choice.disabled) choice.value = detained === '0' ? 'stay' : '';
+
+  const passengers = get('passengers');
+  passengers.hidden = choice.value !== 'leave';
+  const boxes = [...passengers.querySelectorAll('input')];
+  for (const box of boxes) {
+    if (passengers.hidden || box.value === detained) box.checked = false;
+  }
+  const full = boxes.filter((box) => box.checked).length >= 2;
+  for (const box of boxes) {
+    box.disabled = passengers.hidden || box.value === detained || (full && !box.checked);
+  }
+  get('departure-form').querySelector('button').disabled = detained === '';
+}
+
+function renderDeparture() {
+  const { ending } = session;
+  get('departure-form').hidden = Boolean(ending);
+  const result = get('departure-result');
+  result.hidden = !ending;
+  if (ending) {
+    const { detained, leaves, passengers } = ending;
+    const custody = detained === -1 ? '拘束者なし。' : `拘束された役は${playerLabel(detained)}。`;
+    const journey = leaves
+      ? `ロランは地球へ出発します。${passengers.length ? `同乗者は${passengers.map(playerLabel).join('、')}。` : '同乗者はいません。'}`
+      : detained === 0 ? 'ロランは拘束され、出発できません。' : 'ロランは月に残ります。';
+    result.textContent = custody + journey;
+    return;
+  }
+
+  get('detained').replaceChildren(new Option('拘束結果を選択', ''), new Option('拘束者なし', -1),
+    ...roles.map((_, index) => new Option(playerLabel(index), index)));
+  get('departure-choice').value = '';
+  const passengers = get('passengers');
+  passengers.querySelectorAll('label').forEach((label) => label.remove());
+  roles.slice(1).forEach((_, index) => {
+    const role = index + 1;
+    const box = document.createElement('input');
+    box.type = 'checkbox';
+    box.value = String(role);
+    addField(passengers, playerLabel(role), box);
+  });
+  updateDepartureOptions();
+}
+
+get('departure-form').addEventListener('change', updateDepartureOptions);
+get('departure-form').addEventListener('submit', (event) => {
+  event.preventDefault();
+  if (session?.phase !== 4 || session.ending || get('detained').value === ''
+      || get('departure-choice').value === '') return;
+  const ending = {
+    detained: Number(get('detained').value),
+    leaves: get('departure-choice').value === 'leave',
+    passengers: [...get('passengers').querySelectorAll('input:checked')].map((box) => Number(box.value)),
+  };
+  if (validDeparture(ending)) saveSession({ ...session, ending }, 'departure-result');
+});
+
 function render() {
   get('setup').hidden = Boolean(session);
   get('session').hidden = !session;
@@ -207,7 +282,10 @@ function render() {
   get('results').hidden = phase !== 4;
   renderInvestigation();
   if (phase === 3) renderBallots();
-  if (phase === 4) renderResults();
+  if (phase === 4) {
+    renderResults();
+    renderDeparture();
+  }
 }
 
 function startSession(names) {

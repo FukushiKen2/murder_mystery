@@ -35,3 +35,8 @@ select {
 
 .prologue { max-width: 42em; font-size: 1rem; line-height: 1.9; }
 .prologue p { margin: 0 0 1em; }
+
+#departure-form label { display: block; margin: 0 0 12px; }
+#passengers { margin: 16px 0; border: 1px solid var(--line); }
+#passengers input { display: inline; width: auto; margin: 0 8px 0 0; }
+#departure-form button:disabled { opacity: .55; cursor: default; }
