@@ -166,13 +166,35 @@ function playerLabel(index) {
   return `${roles[index]}（${session.names[index]}）`;
 }
 
+// Keep these labels broad enough to read aloud before revealing the evidence.
+const situationLabels = {
+  'S1-01': 'アグリッパの周辺資料1',
+  'S1-02': '殺人現場の証拠1',
+  'S1-03': 'アグリッパの周辺資料2',
+  'S1-04': '宮殿の記録1',
+  'S1-05': '宮殿の記録2',
+  'S1-06': '宮殿での聞き込み1',
+  'S1-07': '宮殿での聞き込み2',
+  'S1-08': '宮殿の記録3',
+  'S1-09': '格納庫の資料1',
+  'S2-01': '格納庫の資料2',
+  'S2-02': '技術関連の資料1',
+  'S2-03': '施設の記録1',
+  'S2-04': '三百年前の資料1',
+  'S2-05': '三百年前の資料2',
+  'S2-06': '技術関連の資料2',
+  'S2-07': '技術関連の資料3',
+  'S2-08': 'アグリッパの周辺資料3',
+  'S2-09': '三百年前の資料3',
+};
+
 function clueLabel(id) {
   const [group, number] = id.split('-');
   const index = Number(number) - 1;
   if (group === 'I') {
     return `${roles[Math.floor(index / 2)]}のカード${index % 2 + 1}`;
   }
-  return `状況カード${index + (group === 'S2' ? 10 : 1)}`;
+  return situationLabels[id];
 }
 
 function renderInvestigation() {
