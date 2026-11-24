@@ -143,8 +143,12 @@ class Game(Room):
         return self.card_action(role, action, field('card'), target())
 
     def sheet_pages(self, index):
-        return [page.strip() for page in re.split(r'(?=^#{1,6} )|(?=^\*\*(?:立場|開始時|目標))',
-                                                self.sheets[index], flags=re.M) if page.strip()]
+        source = self.sheets[index]
+        sections = re.split(r'(?=^## )', source, flags=re.M)
+        if len(sections) > 1:
+            return [(sections[0] + sections[1]).strip(), *[section.strip() for section in sections[2:]]]
+        return [page.strip() for page in re.split(r'(?=^\*\*(?:立場|開始時|目標))',
+                                                source, flags=re.M) if page.strip()]
 
     def form(self, role, action, label, key='', extra=''):
         return (f'<form method="post"><input type="hidden" name="csrf" value="{self.csrf[role]}">'
