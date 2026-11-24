@@ -32,3 +32,6 @@ select {
 .roles summary { cursor: pointer; font-weight: bold; }
 .roles summary::marker { color: var(--gold); }
 .roles details p { margin: 10px 0 0; color: var(--muted); }
+
+.prologue { max-width: 42em; }
+.prologue strong { color: var(--gold); }
