@@ -1,1 +1,36 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>黒歴史の証人 — 白の終焉</title><link rel="stylesheet" href="styles.css"><script src="app.js" defer></script></head><body><header><strong>∀　黒歴史の証人</strong><small>6 PLAYERS · 3 CHAPTERS</small></header><main><section class="hero"><p class="eyebrow">ONLINE MURDER MYSTERY · PREVIEW</p><h1>白の終焉</h1><p>月に目覚めた過去。ひとつの死が、三百年の秘密を呼び起こす。</p><p class="pills"><span>6人用</span><span>約3時間</span><span>Discord音声通話併用</span></p></section><section class="panel"><p class="eyebrow">LOBBY</p><h2>参加画面</h2><p class="note">現在は画面プレビューです。オンラインでのカード配布・同期はまだ有効ではありません。</p><div class="fields"><label>ルームコード<input id="room" placeholder="例：MOON-042"></label><label>表示名<input id="name" placeholder="プレイヤー名"></label></div><button id="join">参加機能の状態を確認</button><p id="status" role="status"></p></section><section class="panel"><p class="eyebrow">CHARACTERS</p><h2>登場人物</h2><div id="roles" class="roles"></div></section><section class="panel"><p class="eyebrow">FLOW</p><h2>ゲームの進行</h2><div class="steps"><article><b>01　第1章</b><p>各自2枚調査、会話と交換</p></article><article><b>02　第2章</b><p>各自2枚調査、真相への接近</p></article><article><b>03　第3章</b><p>最終討論、譲渡、推理、投票</p></article><article><b>04　結末</b><p>ロランの出発選択と得点</p></article></div></section></main><footer>非公式ファン制作・開発用プレビュー／秘密情報は掲載していません</footer></body></html>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>黒歴史の証人 — 白の終焉</title><link rel="stylesheet" href="styles.css"><script src="app.js" defer></script></head><body><header><strong>∀　黒歴史の証人</strong><small>6 PLAYERS · 3 CHAPTERS</small></header><main><section class="hero"><p class="eyebrow">MURDER MYSTERY</p><h1>白の終焉</h1><p>月と地球の関係が揺れる中、300年前の人物アグリッパが突然覚醒した。しかしほどなくして死亡し、その胸には銃創らしき傷があった。何が起こったのか、誰が殺したのか。さらにホワイトドールには危険な機構が眠っている。あなたたち6人はそれぞれの事情を胸に、事件と向き合う。</p><p class="pills"><span>6人用</span><span>約3時間</span><span>Discord音声通話併用</span></p></section><section class="panel" aria-labelledby="session-title">
+  <h2 id="session-title">GM用 進行ツール</h2>
+  <p class="note">この端末に進行を保存します。投票入力と結果表示はGMが管理してください。</p>
+  <noscript><p>操作するにはJavaScriptが有効なブラウザーでページを開いてください。</p></noscript>
+  <p id="status" role="status">操作ボタンを読み込んでいます。表示が変わらない場合は、ダウンロードしたHTMLをブラウザーで直接開いてください。</p>
+  <form id="setup">
+    <h3>参加者を登録</h3>
+    <div id="participants" class="fields"></div>
+    <button id="start" type="submit" disabled>第1章を開始</button>
+    <button id="demo" type="button" disabled>サンプルで試す</button>
+  </form>
+  <div id="session" hidden>
+    <h3 id="phase" tabindex="-1"></h3>
+    <p id="phase-guide" class="note"></p>
+    <ul id="roster" class="roster"></ul>
+    <section id="investigation" aria-labelledby="investigation-title" hidden>
+      <h4 id="investigation-title">カード調査</h4>
+      <p class="note">試遊用の手がかりです。GMが調査する役を選びます。</p>
+      <label>調査する役<select id="investigator"></select></label>
+      <p id="clue-limit" role="status"></p>
+      <div id="clue-board" class="fields"></div>
+      <h4>調査したカード</h4>
+      <ul id="clue-notes" class="roster" tabindex="-1"></ul>
+    </section>
+    <button id="advance" type="button">次へ</button>
+    <form id="voting" hidden>
+      <div id="ballots" class="fields"></div>
+      <button type="submit">投票を確定する</button>
+    </form>
+    <div id="results" hidden>
+      <p id="verdict"></p>
+      <ul id="totals" class="roster"></ul>
+    </div>
+    <button id="reset" class="secondary" type="button">セッションを終了</button>
+  </div>
+</section><section class="panel"><p class="eyebrow">CHARACTERS</p><h2>登場人物</h2><div id="roles" class="roles"></div></section><section class="panel"><p class="eyebrow">FLOW</p><h2>ゲームの進行</h2><div class="steps"><article><b>01　第1章</b><p>各自2枚調査、会話と交換</p></article><article><b>02　第2章</b><p>各自2枚調査、真相への接近</p></article><article><b>03　第3章</b><p>最終討論、譲渡、推理、投票</p></article><article><b>04　結末</b><p>ロランの出発選択と得点</p></article></div></section></main><footer>非公式ファン制作・GM用進行ツール／秘密情報は掲載していません</footer></body></html>
