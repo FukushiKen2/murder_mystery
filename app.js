@@ -54,6 +54,34 @@ function restoreInvestigations(saved) {
   }));
 }
 
+function discoveryRecords(investigations, phase) {
+  const records = new Map();
+  investigations.slice(0, phase + 1).forEach((byRole, chapter) => {
+    byRole.forEach((picks, role) => {
+      picks.forEach((index) => {
+        const id = chapters[chapter][index][2];
+        if (!records.has(id)) records.set(id, { discoveredBy: role, holder: role, chapter });
+      });
+    });
+  });
+  return records;
+}
+
+function applyTransfers(records, saved) {
+  const transfers = [];
+  if (!Array.isArray(saved)) return transfers;
+  for (const entry of saved) {
+    if (!entry) continue;
+    const { id, from, to } = entry;
+    const card = records.get(id);
+    if (!card || card.holder !== from || from === to
+        || !Number.isInteger(to) || to < 0 || to >= roles.length) continue;
+    card.holder = to;
+    transfers.push({ id, from, to });
+  }
+  return transfers;
+}
+
 function validDeparture(ending) {
   if (!ending) return false;
   const { detained, leaves, passengers } = ending;
@@ -78,9 +106,11 @@ function readSession() {
       && votes.every((vote, voter) => Number.isInteger(vote) && vote >= 0
         && vote < roles.length && vote !== voter);
     if (validNames && validPhase && (phase < 4 || validVotes)) {
+      const investigations = restoreInvestigations(saved.investigations);
       return {
         names, phase, votes: phase === 4 ? votes : [],
-        investigations: restoreInvestigations(saved.investigations),
+        investigations,
+        transfers: applyTransfers(discoveryRecords(investigations, phase), saved.transfers),
         ending: phase === 4 && validDeparture(saved.ending) && saved.ending.detained === detainedByVote(votes) ? saved.ending : null,
       };
     }
@@ -93,7 +123,7 @@ function readSession() {
 
 let session = readSession();
 
-function saveSession(next, focusTarget) {
+function persistSession(next) {
   session = next;
   try {
     if (session) localStorage.setItem(storageKey, JSON.stringify(session));
@@ -102,6 +132,10 @@ function saveSession(next, focusTarget) {
   } catch {
     get('status').textContent = '保存できませんでした。再読み込みすると最新の進行が失われることがあります。';
   }
+}
+
+function saveSession(next, focusTarget) {
+  persistSession(next);
   render();
   if (session) get(focusTarget ?? 'phase').focus();
   else get('participants').querySelector('input').focus();
@@ -142,9 +176,11 @@ function clueLabel(id) {
 }
 
 function renderInvestigation() {
-  const { phase, investigations } = session;
-  get('investigation').hidden = phase > chapters.length;
-  if (phase > chapters.length) return;
+  const { phase, investigations, transfers } = session;
+  const records = discoveryRecords(investigations, phase);
+  applyTransfers(records, transfers);
+  const canTransfer = phase < 4;
+  get('investigation').hidden = false;
 
   const roleSelect = get('investigator');
   const role = Number(roleSelect.value);
@@ -157,28 +193,25 @@ function renderInvestigation() {
   const picks = investigations[phase]?.[role];
   get('clue-limit').textContent = cards
     ? `この章の残り調査回数 ${investigationLimit - picks.length} 回`
-    : 'これまでに調べたカードを見直せます。';
+    : canTransfer ? '取得済みのカードを見直し、譲渡を記録できます。'
+      : '投票が確定したため、所持者は変更できません。';
 
-  const holders = new Map();
-  investigations.slice(0, phase + 1).forEach((byRole, chapter) => {
-    byRole.forEach((rolePicks, owner) => {
-      rolePicks.forEach((index) => holders.set(chapters[chapter][index][2], owner));
-    });
-  });
-  const displayCards = cards ?? evidence.filter(([, , id]) => holders.has(id));
+  const displayCards = cards ?? evidence.filter(([, , id]) => records.has(id));
   displayCards.forEach(([, , id], index) => {
     const related = id.startsWith('I-');
-    const owner = holders.get(id);
+    const record = records.get(id);
     const card = document.createElement('article');
     card.className = 'clue-card';
     const heading = document.createElement('h5');
     heading.textContent = clueLabel(id);
     const details = document.createElement('p');
-    details.textContent = `${related ? '所持カード' : '状況カード'} · ${owner === undefined ? '未調査' : `調査した役：${playerLabel(owner)}`}`;
-    if (owner !== undefined) card.classList.add('clue-recorded');
+    details.textContent = record
+      ? `調査した役：${playerLabel(record.discoveredBy)} / 現在の所持者：${playerLabel(record.holder)}`
+      : `${related ? '所持カード' : '状況カード'} · 未調査`;
+    if (record) card.classList.add('clue-recorded');
     card.append(heading, details);
 
-    if (cards && owner === undefined) {
+    if (cards && !record) {
       const ownItem = related && Math.floor((Number(id.slice(2)) - 1) / 2) === role;
       const button = document.createElement('button');
       button.type = 'button';
@@ -192,15 +225,45 @@ function renderInvestigation() {
       });
       card.append(button);
     }
+    if (record && canTransfer) {
+      const form = document.createElement('form');
+      const recipient = document.createElement('select');
+      recipient.required = true;
+      recipient.add(new Option('選択してください', ''));
+      roles.forEach((_, index) => {
+        if (index !== record.holder) recipient.add(new Option(playerLabel(index), index));
+      });
+      addField(form, `${clueLabel(id)}の譲渡先`, recipient);
+      const button = document.createElement('button');
+      button.textContent = '譲渡を記録';
+      form.append(button);
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (session.phase >= 4 || recipient.value === '') return;
+        const transfer = { id, from: record.holder, to: Number(recipient.value) };
+        persistSession({ ...session, transfers: [...session.transfers, transfer] });
+        renderInvestigation();
+        get('transfer-history').focus();
+      });
+      card.append(form);
+    }
     board.append(card);
   });
 
-  const notes = investigations.slice(0, phase + 1).flatMap((byRole, chapter) =>
-    byRole[role].map((index) => {
-      const [title, clue, id] = chapters[chapter][index];
-      return listItem(`第${chapter + 1}章　${clueLabel(id)}（${title}）：${clue}`);
-    }));
+  const notes = [];
+  const holdings = [];
+  for (const [title, clue, id] of evidence) {
+    const record = records.get(id);
+    if (!record) continue;
+    const text = `${clueLabel(id)}（${title}）：${clue}`;
+    if (record.discoveredBy === role) notes.push(listItem(`第${record.chapter + 1}章　${text}`));
+    if (record.holder === role) holdings.push(listItem(text));
+  }
   get('clue-notes').replaceChildren(...(notes.length ? notes : [listItem('調査したカードはまだありません。')]));
+  get('current-holdings').replaceChildren(...(holdings.length ? holdings : [listItem('現在持っているカードはありません。')]));
+  const history = transfers.map(({ id, from, to }) =>
+    listItem(`${clueLabel(id)}：${playerLabel(from)} から ${playerLabel(to)} へ`));
+  get('transfer-history').replaceChildren(...(history.length ? history : [listItem('譲渡の記録はまだありません。')]));
 }
 
 get('investigator').addEventListener('change', renderInvestigation);
@@ -327,7 +390,7 @@ function render() {
 }
 
 function startSession(names) {
-  saveSession({ names, phase: 0, votes: [], investigations: restoreInvestigations() });
+  saveSession({ names, phase: 0, votes: [], investigations: restoreInvestigations(), transfers: [] });
 }
 
 get('demo').addEventListener('click', () => {

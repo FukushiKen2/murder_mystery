@@ -45,3 +45,5 @@ select {
 .clue-card h5 { margin: 0; font-size: 1rem; }
 .clue-card p { margin: 6px 0 10px; color: var(--muted); overflow-wrap: anywhere; }
 .clue-card.clue-recorded { border-color: var(--gold); }
+
+.clue-card form button { margin-top: 8px; }
